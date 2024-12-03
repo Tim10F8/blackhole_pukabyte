@@ -23,7 +23,7 @@ x-repair: &repair
 services:
   blackhole:
     <<: *blackhole
-    container_name: blackhole_service
+    container_name: blackhole
     environment:
       - BLACKHOLE_BASE_WATCH_PATH=/${BLACKHOLE_BASE_WATCH_PATH}
     volumes:
@@ -35,7 +35,7 @@ services:
 
   blackhole_4k:
     <<: *blackhole
-    container_name: blackhole_4k_service
+    container_name: blackhole4k
     environment:
       - SONARR_HOST=${SONARR_HOST_4K}
       - SONARR_API_KEY=${SONARR_API_KEY_4K}
@@ -45,13 +45,13 @@ services:
     volumes:
       - ${REALDEBRID_MOUNT_TORRENTS_PATH:-${BLACKHOLE_RD_MOUNT_TORRENTS_PATH:-/dev/null}}:${REALDEBRID_MOUNT_TORRENTS_PATH:-${BLACKHOLE_RD_MOUNT_TORRENTS_PATH:-/dev/null}}
       - ${TORBOX_MOUNT_TORRENTS_PATH:-/dev/null}:${TORBOX_MOUNT_TORRENTS_PATH:-/dev/null}
-      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH} 4k:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH}
-      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH} 4k:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH}
+      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH}4k:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH}
+      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH}4k:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH}
     profiles: [blackhole_4k, blackhole_all, all]
 
   blackhole_anime:
     <<: *blackhole
-    container_name: blackhole_anime_service
+    container_name: blackholeanime
     environment:
       - SONARR_HOST=${SONARR_HOST_ANIME}
       - SONARR_API_KEY=${SONARR_API_KEY_ANIME}
@@ -61,13 +61,13 @@ services:
     volumes:
       - ${REALDEBRID_MOUNT_TORRENTS_PATH:-${BLACKHOLE_RD_MOUNT_TORRENTS_PATH:-/dev/null}}:${REALDEBRID_MOUNT_TORRENTS_PATH:-${BLACKHOLE_RD_MOUNT_TORRENTS_PATH:-/dev/null}}
       - ${TORBOX_MOUNT_TORRENTS_PATH:-/dev/null}:${TORBOX_MOUNT_TORRENTS_PATH:-/dev/null}
-      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH} anime:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH}
-      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH} anime:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH}
+      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH}anime:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_SONARR_PATH}
+      - ${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH}anime:/${BLACKHOLE_BASE_WATCH_PATH}/${BLACKHOLE_RADARR_PATH}
     profiles: [blackhole_anime, blackhole_all, all]
 
   blackhole_mux:
     <<: *blackhole
-    container_name: blackhole_mux_service
+    container_name: blackholemux
     environment:
       - SONARR_HOST=${SONARR_HOST_MUX}
       - SONARR_API_KEY=${SONARR_API_KEY_MUX}
@@ -83,7 +83,7 @@ services:
 
   repair_service:
     <<: *repair
-    container_name: repair_service
+    container_name: repair
     volumes:
       - ${REALDEBRID_MOUNT_TORRENTS_PATH:-${BLACKHOLE_RD_MOUNT_TORRENTS_PATH:-/dev/null}}:${REALDEBRID_MOUNT_TORRENTS_PATH:-${BLACKHOLE_RD_MOUNT_TORRENTS_PATH:-/dev/null}}
       - ${TORBOX_MOUNT_TORRENTS_PATH:-/dev/null}:${TORBOX_MOUNT_TORRENTS_PATH:-/dev/null}
@@ -93,7 +93,7 @@ services:
 
   repair_4k:
     <<: *repair
-    container_name: repair_4k_service
+    container_name: repair4k
     environment:
       - SONARR_HOST=${SONARR_HOST_4K}
       - SONARR_API_KEY=${SONARR_API_KEY_4K}
@@ -108,7 +108,7 @@ services:
 
   repair_anime:
     <<: *repair
-    container_name: repair_anime_service
+    container_name: repairanime
     environment:
       - SONARR_HOST=${SONARR_HOST_ANIME}
       - SONARR_API_KEY=${SONARR_API_KEY_ANIME}
@@ -123,7 +123,7 @@ services:
 
   repair_mux:
     <<: *repair
-    container_name: repair_mux_service
+    container_name: repairmux
     environment:
       - SONARR_HOST=${SONARR_HOST_MUX}
       - SONARR_API_KEY=${SONARR_API_KEY_MUX}
