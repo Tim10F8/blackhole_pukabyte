@@ -173,94 +173,19 @@ class RealDebrid(TorrentBase):
         return not not self.addTorrent()
 
     def _getInstantAvailability(self, refresh=False):
-        if refresh or not self._instantAvailability:
-            torrentHash = self.getHash()
-            self.print('hash:', torrentHash)
-
-            if len(torrentHash) != 40 or True:
-                self.incompatibleHashSize = True
-                return True
-
-            instantAvailabilityRequest = retryRequest(
-                lambda: requests.get(urljoin(realdebrid['host'], f"torrents/instantAvailability/{torrentHash}"), headers=self.headers),
-                print=self.print
-            )
-            if instantAvailabilityRequest is None:
-                return None
-
-            instantAvailabilities = instantAvailabilityRequest.json()
-            self.print('instantAvailabilities:', instantAvailabilities)
-            if not instantAvailabilities: return
-
-            instantAvailabilityHosters = next(iter(instantAvailabilities.values()))
-            if not instantAvailabilityHosters: return
-
-            self._instantAvailability = next(iter(instantAvailabilityHosters.values()))
-
-        return self._instantAvailability
-    
+        torrentHash = self.getHash()
+        self.print('hash:', torrentHash)
+        self.skipAvailabilityCheck = True
+        return True
     def _getAvailableHost(self):
         availableHostsRequest = retryRequest(
-            lambda: requests.get(urljoin(realdebrid['host'], "torrents/availableHosts"), headers=self.headers),
-            print=self.print
-        )
-        if availableHostsRequest is None:
-            return None
-
-        availableHosts = availableHostsRequest.json()
-        return availableHosts[0]['host']
-    
-    async def getInfo(self, refresh=False):
-        self._enforceId()
-
-        if refresh or not self._info:
-            infoRequest = retryRequest(
-                lambda: requests.get(urljoin(realdebrid['host'], f"torrents/info/{self.id}"), headers=self.headers),
-                print=self.print
-            )
-            if infoRequest is None:
-                self._info = None
-            else:
-                info = infoRequest.json()
-                info['status'] = self._normalize_status(info['status'])
-                self._info = info
-
-        return self._info
-
-    async def selectFiles(self):
-        self._enforceId()
-
-        info = await self.getInfo()
-        if info is None:
-            return False
-
-        self.print('files:', info['files'])
-        mediaFiles = [file for file in info['files'] if os.path.splitext(file['path'])[1].lower() in mediaExtensions]
-        
-        if not mediaFiles:
-            self.print('no media files found')
-            return False
-
-        mediaFileIds = {str(file['id']) for file in mediaFiles}
-        self.print('required fileIds:', mediaFileIds)
-        
-        largestMediaFile = max(mediaFiles, key=lambda file: file['bytes'])
+@@ -248,281 +228,272 @@
         largestMediaFileId = str(largestMediaFile['id'])
         self.print('only largest file:', self.onlyLargestFile)
         self.print('largest file:', largestMediaFile)
-
-        if self.failIfNotCached and not self.incompatibleHashSize:
-            targetFileIds = {largestMediaFileId} if self.onlyLargestFile else mediaFileIds
-            if not any(set(fileGroup.keys()) == targetFileIds for fileGroup in self._instantAvailability):
-                extraFilesGroup = next((fileGroup for fileGroup in self._instantAvailability if largestMediaFileId in fileGroup.keys()), None)
-                if self.onlyLargestFile and extraFilesGroup:
-                    self.print('extra files required for cache:', extraFilesGroup)
-                    discordUpdate('Extra files required for cache:', extraFilesGroup)
-                return False
-            
         if self.onlyLargestFile and len(mediaFiles) > 1:
             discordUpdate('largest file:', largestMediaFile['path'])
-                
+
         files = {'files': [largestMediaFileId] if self.onlyLargestFile else ','.join(mediaFileIds)}
         selectFilesRequest = retryRequest(
             lambda: requests.post(urljoin(realdebrid['host'], f"torrents/selectFiles/{self.id}"), headers=self.headers, data=files),
@@ -268,18 +193,16 @@ class RealDebrid(TorrentBase):
         )
         if selectFilesRequest is None:
             return False
-        
+
         return True
 
     def delete(self):
         self._enforceId()
-
         deleteRequest = retryRequest(
             lambda: requests.delete(urljoin(realdebrid['host'], f"torrents/delete/{self.id}"), headers=self.headers),
             print=self.print
         )
         return not not deleteRequest
-
 
     async def getTorrentPath(self):
         filename = (await self.getInfo())['filename']
@@ -324,7 +247,7 @@ class RealDebrid(TorrentBase):
 
     def _addMagnetFile(self):
         return self._addFile(requests.post, "torrents/addMagnet", {'magnet': self.fileData})
-    
+
     def _normalize_status(self, status):
         if status in ['waiting_files_selection']:
             return self.STATUS_WAITING_FILES_SELECTION
@@ -358,12 +281,12 @@ class Torbox(TorrentBase):
             self.print('instantAvailability:', not not instantAvailability)
             if not instantAvailability:
                 return False
-            
+
         if self.addTorrent():
             self.submittedTime = datetime.now()
             return True
         return False
-    
+
     def _getInstantAvailability(self, refresh=False):
         if refresh or not self._instantAvailability:
             torrentHash = self.getHash()
@@ -382,13 +305,13 @@ class Torbox(TorrentBase):
 
             instantAvailabilities = instantAvailabilityRequest.json()
             self.print('instantAvailabilities:', instantAvailabilities)
-            
+
             # Check if 'data' exists and is not None or False
             if instantAvailabilities and 'data' in instantAvailabilities and instantAvailabilities['data']:
                 self._instantAvailability = instantAvailabilities['data']
             else:
                 self._instantAvailability = None
-        
+
         return self._instantAvailability
 
     async def getInfo(self, refresh=False):
@@ -397,7 +320,7 @@ class Torbox(TorrentBase):
         if refresh or not self._info:
             if not self.authId:
                 return None
-            
+
             currentTime = datetime.now()
             if (currentTime - self.submittedTime).total_seconds() < 300:
                 if not self.lastInactiveCheck or (currentTime - self.lastInactiveCheck).total_seconds() > 5:
@@ -416,13 +339,13 @@ class Torbox(TorrentBase):
                     return None
 
                 torrents = infoRequest.json()['data']
-                
+
                 for torrent in torrents:
                     if torrent['id'] == self.id:
                         torrent['status'] = self._normalize_status(torrent['download_state'], torrent['download_finished'])
                         self._info = torrent
                         return self._info
-                
+
                 await asyncio.sleep(1)
         return self._info
 
@@ -442,7 +365,7 @@ class Torbox(TorrentBase):
         filename = (await self.getInfo())['files'][0]['name'].split("/")[0]
 
         folderPathMountFilenameTorrent = os.path.join(self.mountTorrentsPath, filename)
-       
+
         if os.path.exists(folderPathMountFilenameTorrent) and os.listdir(folderPathMountFilenameTorrent):
             folderPathMountTorrent = folderPathMountFilenameTorrent
         else:
@@ -457,13 +380,13 @@ class Torbox(TorrentBase):
         )
         if request is None:
             return None
-        
+
         response = request.json()
         self.print('response info:', response)
-        
+
         if response.get('detail') == 'queued':
             return None
-        
+
         self.id = response['data']['torrent_id']
 
         return self.id
@@ -496,7 +419,7 @@ class Torrent(TorrentBase):
         if not self._hash:
             import bencode3
             self._hash = hashlib.sha1(bencode3.bencode(bencode3.bdecode(self.fileData)['info'])).hexdigest()
-        
+
         return self._hash
 
     def addTorrent(self):
@@ -508,9 +431,9 @@ class Magnet(TorrentBase):
         if not self._hash:
             # Consider changing when I'm more familiar with hashes
             self._hash = re.search('xt=urn:btih:(.+?)(?:&|$)', self.fileData).group(1)
-        
+
         return self._hash
-    
+
     def addTorrent(self):
         return self._addMagnetFile()
 
