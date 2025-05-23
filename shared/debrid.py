@@ -486,7 +486,7 @@ class Torbox(TorrentBase):
             'queuedDL', 'checkingDL', 'forcedDL', 'checkingResumeData', 'moving'
         ]:
             return self.STATUS_DOWNLOADING
-        elif status in ['error', 'stalledUP', 'stalledDL', 'stalled (no seeds)', 'missingFiles']:
+        elif status in ['error', 'stalledUP', 'stalledDL', 'stalled (no seeds)', 'missingFiles', 'failed']:
             return self.STATUS_ERROR
         return status
 
