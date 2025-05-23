@@ -108,7 +108,7 @@ class TorrentBase(ABC):
         self.file = file
         self.failIfNotCached = failIfNotCached
         self.onlyLargestFile = onlyLargestFile
-        self.incompatibleHashSize = False
+        self.skipAvailabilityCheck = False
         self.id = None
         self._info = None
         self._hash = None
