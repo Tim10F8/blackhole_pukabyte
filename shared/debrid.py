@@ -439,7 +439,7 @@ class Torbox(TorrentBase):
         return not not deleteRequest
 
     async def getTorrentPath(self):
-        filename = (await self.getInfo())['name']
+        filename = (await self.getInfo())['files'][0]['name'].split("/")[0]
 
         folderPathMountFilenameTorrent = os.path.join(self.mountTorrentsPath, filename)
        
